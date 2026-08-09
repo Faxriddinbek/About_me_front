@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { adminApi } from '../api/client'
-import { isCloudinaryConfigured } from '../api/cloudinary'
 import { ContactsList } from '../components/admin/ContactsList'
 import { MediaManager } from '../components/admin/MediaManager'
 import { inputStyle, LINE, MUTED } from '../components/admin/tokens'
@@ -128,16 +127,6 @@ export function AdminPage() {
             </Button>
           </div>
         </header>
-
-        {!isCloudinaryConfigured && (
-          <div style={{ marginBottom: 16 }}>
-            <Banner tone="info">
-              Cloudinary sozlanmagan — fayl yuklash o‘chirilgan. Hozircha havolalarni qo‘lda
-              qo‘yishingiz mumkin. Sozlash uchun <code>VITE_CLOUDINARY_CLOUD_NAME</code> va{' '}
-              <code>VITE_CLOUDINARY_UPLOAD_PRESET</code> kerak.
-            </Banner>
-          </div>
-        )}
 
         <nav style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           {TABS.map((item) => (

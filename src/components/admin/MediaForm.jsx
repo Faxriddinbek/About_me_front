@@ -1,9 +1,5 @@
 import { useRef, useState } from 'react'
-import {
-  MAX_UPLOAD_BYTES,
-  isCloudinaryConfigured,
-  uploadToCloudinary,
-} from '../../api/cloudinary'
+import { MAX_UPLOAD_MB, uploadImage } from '../../api/upload'
 import { youtubeId } from '../../lib/video'
 import { inputStyle, MUTED } from './tokens'
 import { Banner, Button, Card, Field } from './ui'
@@ -19,17 +15,16 @@ const EMPTY = {
   is_visible: true,
 }
 
-const formatMb = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`
-
 /**
  * Create or edit one media item.
  *
- * A URL can arrive two ways: uploaded to Cloudinary, or pasted. Both are kept
- * because Cloudinary's free plan rejects files over 100 MB, and a long video
- * has to live on YouTube instead. The stored row is identical either way — only
- * the URL differs — so nothing downstream needs to know which path was used.
+ * A URL can arrive two ways: uploaded to our backend, or pasted. Both exist
+ * because uploads are capped at 15 MB and images only — a real video belongs on
+ * YouTube, which streams adaptively instead of forcing a full download. The
+ * stored row is identical either way, so nothing downstream cares which path
+ * produced the URL.
  */
-export function MediaForm({ initial, onSubmit, onCancel, busy }) {
+export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
   const [form, setForm] = useState(() => ({
     ...EMPTY,
     ...initial,
@@ -54,14 +49,8 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
     setError(null)
     setProgress(0)
     try {
-      const result = await uploadToCloudinary(file, { onProgress: setProgress })
-      setForm((previous) => ({
-        ...previous,
-        url: result.url,
-        thumbnail_url: result.thumbnailUrl ?? '',
-        // Trust what Cloudinary detected over whatever the dropdown said.
-        media_type: result.resourceType === 'video' ? 'video' : 'photo',
-      }))
+      const url = await uploadImage(file, token, { onProgress: setProgress })
+      setForm((previous) => ({ ...previous, url, media_type: 'photo' }))
     } catch (uploadError) {
       setError(uploadError.message)
     } finally {
@@ -74,7 +63,7 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
   const handleSubmit = (event) => {
     event.preventDefault()
     if (!form.url.trim()) {
-      setError('Avval fayl yuklang yoki havola qo‘ying.')
+      setError('Avval rasm yuklang yoki havola qo‘ying.')
       return
     }
     setError(null)
@@ -104,18 +93,14 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
 
         {/* --- 1. upload --- */}
         <Field
-          label="1) Fayl yuklash"
-          hint={
-            isCloudinaryConfigured
-              ? `Rasm yoki video, maksimum ${formatMb(MAX_UPLOAD_BYTES)}`
-              : 'Cloudinary sozlanmagan — pastdagi havola maydonidan foydalaning'
-          }
+          label="1) Rasm yuklash"
+          hint={`jpg, png, webp, gif, avif, svg — maksimum ${MAX_UPLOAD_MB} MB`}
         >
           <input
             ref={fileInput}
             type="file"
-            accept="image/*,video/*"
-            disabled={!isCloudinaryConfigured || uploading || busy}
+            accept="image/*"
+            disabled={uploading || busy}
             onChange={handleFile}
             style={{ ...inputStyle, padding: 8, cursor: 'pointer' }}
           />
@@ -143,7 +128,7 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
         {/* --- 2. or paste --- */}
         <Field
           label="2) Yoki havola qo‘ying"
-          hint="Katta videolar uchun YouTube havolasi (youtube.com/watch?v=… yoki youtu.be/…)"
+          hint="Video uchun YouTube havolasi (youtube.com/watch?v=… yoki youtu.be/…)"
         >
           <input
             type="url"
@@ -156,7 +141,8 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
 
         {isYoutube && (
           <Banner tone="info">
-            YouTube havolasi aniqlandi — galereyada pleyer sifatida ko‘rsatiladi.
+            YouTube havolasi aniqlandi — galereyada pleyer sifatida ko‘rsatiladi. “Turi” ni{' '}
+            <strong>Video</strong> qilib qo‘ying.
           </Banner>
         )}
 
@@ -201,7 +187,7 @@ export function MediaForm({ initial, onSubmit, onCancel, busy }) {
 
         <Field
           label="Muqova rasmi (ixtiyoriy)"
-          hint="Video uchun oldindan ko‘rsatiladigan rasm. Bo‘sh qoldirsangiz avtomatik olinadi."
+          hint="Video uchun oldindan ko‘rsatiladigan rasm. YouTube uchun bo‘sh qoldiring — avtomatik olinadi."
         >
           <input
             type="url"

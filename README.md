@@ -76,29 +76,22 @@ What it manages:
 
 ### Uploads
 
-Files go **straight from the browser to Cloudinary**; they never pass through
-the backend, whose filesystem is ephemeral on Railway. Set two variables to
-enable it:
+Images are uploaded to **our own backend** (`POST /api/v1/admin/media/upload`)
+and served back from `/api/v1/files/…`. There is nothing to configure — no
+account, no keys.
 
-```
-VITE_CLOUDINARY_CLOUD_NAME=…
-VITE_CLOUDINARY_UPLOAD_PRESET=…    # an *unsigned* preset
-```
-
-Both are public by design — an unsigned preset names the target, it does not
-authorise anything. Restrict the preset itself in the Cloudinary dashboard
-(folder, allowed formats, max size); that is what limits abuse.
-
-Leave them empty and the panel still works — only the file picker is disabled,
-and URLs can be pasted by hand.
+A hosted image CDN would normally be the better choice, but Cloudinary and its
+peers block sign-ups from Uzbekistan, so the API stores the files itself. It
+accepts image extensions only, up to **15 MB**. In production `UPLOAD_DIR` must
+point at a persistent volume or every deploy wipes the images — see the
+backend's `.env.example`.
 
 ### Videos
 
-Cloudinary's free plan caps a single file at **100 MB** and the whole account at
-**25 GB of delivery per month**, so a long video does not belong there — one
-viewer streaming a 4 GB file would burn a sixth of the monthly quota. Paste a
-**YouTube** link instead: the gallery detects it, shows the thumbnail, and
-mounts the player only after a click.
+Videos are **not** uploaded. Put them on YouTube (Unlisted is enough) and paste
+the link: the gallery recognises it, shows YouTube's thumbnail, and mounts the
+player only after a click. That avoids paying to serve gigabytes and gets
+adaptive quality for free.
 
 ## Layout
 
@@ -106,7 +99,7 @@ mounts the player only after a click.
 src/
 ├── api/
 │   ├── client.js          Every backend call — the only place URLs are built
-│   └── cloudinary.js      Browser → Cloudinary uploads with progress
+│   └── upload.js          Image upload with a progress callback
 ├── lib/video.js           YouTube URL detection and embedding
 ├── pages/
 │   ├── SitePage.jsx       The public one-pager

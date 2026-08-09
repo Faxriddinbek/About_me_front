@@ -182,6 +182,7 @@ export function MediaManager({ token }) {
       {editing && (
         <MediaForm
           key={editing.id ?? 'new'}
+          token={token}
           initial={editing}
           onSubmit={save}
           onCancel={() => setEditing(null)}
