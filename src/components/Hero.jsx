@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { api } from '../api/client'
 import { CAROUSEL_INTERVAL_MS, FALLBACK_IMAGE, HERO_PHOTOS } from '../config'
+import { useApiResource } from '../hooks/useApiResource'
 import { usePrefersReducedMotion } from '../hooks/useReveal'
 
 const SWIPE_THRESHOLD_PX = 40
@@ -21,12 +23,33 @@ const FRAME_HEIGHT = 'min(84vh, 900px)'
  * The carousel cross-fades by stacking every photo and animating opacity, so
  * there is never a frame where no image is painted.
  */
-export function Hero({ t, isMobile }) {
+export function Hero({ t, lang, isMobile }) {
   const [slide, setSlide] = useState(0)
   const touchStartX = useRef(null)
   const reducedMotion = usePrefersReducedMotion()
 
-  const total = HERO_PHOTOS.length
+  const fetcher = useCallback(
+    (signal) =>
+      api.listMedia({ lang, placement: 'hero', type: 'photo', limit: 12, signal }),
+    [lang],
+  )
+  const { data } = useApiResource(fetcher, [lang])
+
+  // Fall back to the bundled photos while the request is in flight, if it
+  // fails, or if nothing has been added in the admin panel yet — the hero is
+  // the first thing a visitor sees and must never be blank.
+  const photos = useMemo(() => {
+    const items = data?.items ?? []
+    if (items.length === 0) return HERO_PHOTOS
+    return items.map((item) => ({ url: item.url, alt: item.title ?? '' }))
+  }, [data])
+
+  const total = photos.length
+
+  // A shorter list from the API can leave the index past the end.
+  useEffect(() => {
+    setSlide((current) => (current < total ? current : 0))
+  }, [total])
 
   const go = useCallback(
     (direction) => setSlide((current) => (current + direction + total) % total),
@@ -112,7 +135,7 @@ export function Hero({ t, isMobile }) {
           }}
         />
 
-        {HERO_PHOTOS.map((photo, index) => {
+        {photos.map((photo, index) => {
           const isActive = index === slide
           return (
             <img
@@ -159,7 +182,7 @@ export function Hero({ t, isMobile }) {
             gap: 7,
           }}
         >
-          {HERO_PHOTOS.map((photo, index) => (
+          {photos.map((photo, index) => (
             <button
               key={photo.url}
               type="button"

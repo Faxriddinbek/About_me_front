@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { api } from '../api/client'
 import { useApiResource } from '../hooks/useApiResource'
+import { describeMedia } from '../lib/video'
 import { EmptyState, SectionHeader } from './SectionHeader'
 
 // `null` means "no filter" — the backend's ?type= is simply omitted.
@@ -10,31 +11,100 @@ const FILTERS = [
   { key: 'video', labelKey: 'medVideos' },
 ]
 
+function PlayBadge() {
+  return (
+    <div
+      style={{
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        background: 'rgba(74,222,128,0.92)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.45)',
+      }}
+    >
+      <span
+        style={{
+          marginLeft: 4,
+          borderLeft: '16px solid #04130b',
+          borderTop: '10px solid transparent',
+          borderBottom: '10px solid transparent',
+        }}
+      />
+    </div>
+  )
+}
+
 function MediaTile({ item }) {
-  const isVideo = item.media_type === 'video'
+  const [playing, setPlaying] = useState(false)
+  const media = describeMedia(item)
+  const isVideo = media.kind !== 'image'
   // Videos keep their native 16/9; photos use 4/3 so the grid stays even.
   const ratio = isVideo ? '16 / 9' : '4 / 3'
 
-  return (
-    <div
-      className="media-tile"
-      style={{
-        position: 'relative',
-        borderRadius: 10,
-        overflow: 'hidden',
-        background: '#161b22',
-        border: '1px solid #30363d',
-        aspectRatio: ratio,
-        transition: 'border-color 260ms ease, box-shadow 260ms ease',
-      }}
-    >
-      <img
-        src={item.thumbnail_url || item.url}
-        alt={item.title ?? ''}
-        loading="lazy"
-        draggable="false"
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      />
+  const frameStyle = {
+    position: 'relative',
+    borderRadius: 10,
+    overflow: 'hidden',
+    background: '#161b22',
+    border: '1px solid #30363d',
+    aspectRatio: ratio,
+    transition: 'border-color 260ms ease, box-shadow 260ms ease',
+  }
+
+  // Players are mounted only after a click. Embedding every iframe up front
+  // would pull in a YouTube player per tile — slow, and it phones home before
+  // the visitor has asked to watch anything.
+  if (playing && media.kind === 'youtube') {
+    return (
+      <div className="media-tile" style={frameStyle}>
+        <iframe
+          src={`${media.embedUrl}&autoplay=1`}
+          title={item.title ?? 'Video'}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        />
+      </div>
+    )
+  }
+
+  if (playing && media.kind === 'file') {
+    return (
+      <div className="media-tile" style={frameStyle}>
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <video
+          src={media.src}
+          poster={media.poster ?? undefined}
+          controls
+          autoPlay
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
+        />
+      </div>
+    )
+  }
+
+  const poster = media.kind === 'image' ? media.src : media.poster
+
+  const content = (
+    <>
+      {poster ? (
+        <img
+          src={poster}
+          alt={item.title ?? ''}
+          loading="lazy"
+          draggable="false"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+          <span style={{ fontSize: 32, color: 'var(--gr)', opacity: 0.3 }}>{'{ }'}</span>
+        </div>
+      )}
+
       {isVideo && (
         <div
           style={{
@@ -46,29 +116,47 @@ function MediaTile({ item }) {
             background: 'rgba(0,0,0,0.35)',
           }}
         >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(74,222,128,0.9)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span
-              style={{
-                marginLeft: 3,
-                borderLeft: '14px solid #04130b',
-                borderTop: '8px solid transparent',
-                borderBottom: '8px solid transparent',
-              }}
-            />
-          </div>
+          <PlayBadge />
         </div>
       )}
-    </div>
+
+      {item.title && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: '24px 12px 10px',
+            fontSize: 13,
+            color: '#e6edf3',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)',
+          }}
+        >
+          {item.title}
+        </div>
+      )}
+    </>
+  )
+
+  if (!isVideo) {
+    return (
+      <div className="media-tile" style={frameStyle}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className="media-tile"
+      onClick={() => setPlaying(true)}
+      aria-label={item.title ? `${item.title} — ijro etish` : 'Videoni ijro etish'}
+      style={{ ...frameStyle, padding: 0, cursor: 'pointer', display: 'block', width: '100%' }}
+    >
+      {content}
+    </button>
   )
 }
 
@@ -81,8 +169,11 @@ function MediaTile({ item }) {
 export function Media({ t, lang, isMobile, revealed }) {
   const [filter, setFilter] = useState(null)
 
+  // placement=gallery keeps the home-page carousel's photos out of the grid;
+  // they are managed in the same table but belong to a different surface.
   const fetcher = useCallback(
-    (signal) => api.listMedia({ lang, type: filter, limit: 50, signal }),
+    (signal) =>
+      api.listMedia({ lang, type: filter, placement: 'gallery', limit: 50, signal }),
     [lang, filter],
   )
   const { data, status, error, reload } = useApiResource(fetcher, [lang, filter])

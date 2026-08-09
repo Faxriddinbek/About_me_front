@@ -1,75 +1,28 @@
 import { useEffect, useState } from 'react'
-import { AiButton } from './components/AiButton'
-import { Contact } from './components/Contact'
-import { Hero } from './components/Hero'
-import { MatrixRain } from './components/MatrixRain'
-import { Media } from './components/Media'
-import { Nav } from './components/Nav'
-import { Projects } from './components/Projects'
-import { useBreakpoint } from './hooks/useBreakpoint'
-import { useReveal } from './hooks/useReveal'
-import { useScrollSpy } from './hooks/useScrollSpy'
-import { LANGS, makeTranslator } from './i18n/translations'
+import { AdminPage } from './pages/AdminPage'
+import { SitePage } from './pages/SitePage'
 
-const SECTION_IDS = ['home', 'projects', 'contact', 'media']
-const LANG_STORAGE_KEY = 'portfolio:lang'
+const ADMIN_PATH = '/admin'
 
-/** Restore the previous choice, otherwise default to Uzbek. */
-function initialLang() {
-  if (typeof window === 'undefined') return 'uz'
-  const stored = window.localStorage.getItem(LANG_STORAGE_KEY)
-  return LANGS.includes(stored) ? stored : 'uz'
-}
-
+/**
+ * Minimal path router.
+ *
+ * Two screens do not justify a routing library — react-router would add a
+ * dependency and ~10 KB to serve one comparison. `popstate` keeps the browser's
+ * back button working, which is the only navigation case that actually occurs
+ * here (the admin link is a plain <a>, so forward navigation is a full load).
+ */
 export default function App() {
-  const [lang, setLang] = useState(initialLang)
-  const { isMobile, isTablet } = useBreakpoint()
-  const activeSection = useScrollSpy(SECTION_IDS)
-  const revealed = useReveal(SECTION_IDS)
-
-  const t = makeTranslator(lang)
+  const [path, setPath] = useState(() => window.location.pathname)
 
   useEffect(() => {
-    window.localStorage.setItem(LANG_STORAGE_KEY, lang)
-    // Keeps screen readers and search engines in step with the visible copy.
-    document.documentElement.lang = lang
-  }, [lang])
+    const onPopState = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        minHeight: '100vh',
-        width: '100%',
-        background: '#0a0e17',
-        color: '#e6edf3',
-        fontFamily: 'var(--font-mono)',
-      }}
-    >
-      <MatrixRain />
+  // Tolerates a trailing slash so /admin and /admin/ both resolve.
+  const isAdmin = path.replace(/\/+$/, '') === ADMIN_PATH
 
-      <Nav
-        lang={lang}
-        onLangChange={setLang}
-        activeSection={activeSection}
-        isMobile={isMobile}
-      />
-
-      <Hero t={t} isMobile={isMobile} />
-
-      <Projects
-        t={t}
-        lang={lang}
-        isMobile={isMobile}
-        isTablet={isTablet}
-        revealed={revealed.has('projects')}
-      />
-
-      <Contact t={t} isMobile={isMobile} revealed={revealed.has('contact')} />
-
-      <Media t={t} lang={lang} isMobile={isMobile} revealed={revealed.has('media')} />
-
-      <AiButton isMobile={isMobile} />
-    </div>
-  )
+  return isAdmin ? <AdminPage /> : <SitePage />
 }

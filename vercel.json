@@ -8,6 +8,10 @@
     {
       "source": "/health",
       "destination": "https://REPLACE-WITH-BACKEND-HOST/health"
+    },
+    {
+      "source": "/((?!assets/|uploads/|favicon).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -22,6 +26,10 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
+    },
+    {
+      "source": "/admin",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ]
 }

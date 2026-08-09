@@ -63,11 +63,54 @@ only.
 
 ---
 
+## Admin panel
+
+Private screen at **`/admin`**. Sign in with the backend's `ADMIN_TOKEN`; it is
+held in `sessionStorage`, so it dies with the tab.
+
+What it manages:
+
+- **Media** — add, edit, reorder, hide and delete gallery items and the
+  home-page carousel photos (`placement: hero | gallery`)
+- **Xabarlar** — read contact-form submissions and mark them read
+
+### Uploads
+
+Files go **straight from the browser to Cloudinary**; they never pass through
+the backend, whose filesystem is ephemeral on Railway. Set two variables to
+enable it:
+
+```
+VITE_CLOUDINARY_CLOUD_NAME=…
+VITE_CLOUDINARY_UPLOAD_PRESET=…    # an *unsigned* preset
+```
+
+Both are public by design — an unsigned preset names the target, it does not
+authorise anything. Restrict the preset itself in the Cloudinary dashboard
+(folder, allowed formats, max size); that is what limits abuse.
+
+Leave them empty and the panel still works — only the file picker is disabled,
+and URLs can be pasted by hand.
+
+### Videos
+
+Cloudinary's free plan caps a single file at **100 MB** and the whole account at
+**25 GB of delivery per month**, so a long video does not belong there — one
+viewer streaming a 4 GB file would burn a sixth of the monthly quota. Paste a
+**YouTube** link instead: the gallery detects it, shows the thumbnail, and
+mounts the player only after a click.
+
 ## Layout
 
 ```
 src/
-├── api/client.js          Every backend call — the only place URLs are built
+├── api/
+│   ├── client.js          Every backend call — the only place URLs are built
+│   └── cloudinary.js      Browser → Cloudinary uploads with progress
+├── lib/video.js           YouTube URL detection and embedding
+├── pages/
+│   ├── SitePage.jsx       The public one-pager
+│   └── AdminPage.jsx      /admin — auth plus the two tabs
 ├── components/
 │   ├── MatrixRain.jsx     Full-screen canvas background
 │   ├── Nav.jsx            Fixed header, scroll-spy underline, mobile menu
@@ -76,7 +119,8 @@ src/
 │   ├── Contact.jsx        Form → POST /api/v1/contact
 │   ├── Media.jsx          Gallery ← GET /api/v1/media
 │   ├── AiButton.jsx       Floating action button
-│   └── SectionHeader.jsx  Shared section heading + empty state
+│   ├── SectionHeader.jsx  Shared section heading + empty state
+│   └── admin/             MediaManager, MediaForm, ContactsList, ui, tokens
 ├── hooks/
 │   ├── useApiResource.js  loading / success / error state machine
 │   ├── useBreakpoint.js   isMobile / isTablet
@@ -87,7 +131,7 @@ src/
 ├── config.js              Contact details, hero photos
 ├── styles/                Design-system tokens from the original export
 ├── index.css              Globals, keyframes, :hover / :focus states
-├── App.jsx                Composes the page, owns the language
+├── App.jsx                Routes / vs /admin
 └── main.jsx               Entry point
 ```
 
@@ -96,9 +140,10 @@ src/
 | I want to change… | Edit |
 | --- | --- |
 | Email / Telegram / GitHub links | `src/config.js` |
-| Hero carousel photos | `src/config.js` + drop files in `public/` |
+| Hero carousel photos | Admin panel → placement "Home karusel". `src/config.js` is only the fallback for when none exist |
+| Gallery photos and videos | Admin panel → placement "Galereya" |
 | Any UI text | `src/i18n/translations.js` |
-| Projects or gallery content | `../backent_me/scripts/seed_data.json`, then re-run the seed |
+| Projects | `../backent_me/scripts/seed_data.json`, then re-run the seed |
 | Colours, fonts, spacing | `src/styles/tokens/*.css` |
 
 Layout styling is inline in each component, matching the original design

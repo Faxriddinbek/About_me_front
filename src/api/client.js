@@ -78,10 +78,14 @@ export const api = {
 
   /**
    * GET /api/v1/media — returns a Page<MediaOut>.
-   * `type` filters by "photo" | "video"; the backend exposes it as ?type=.
+   *
+   * `type` filters by "photo" | "video" (the backend exposes it as ?type=);
+   * `placement` by "hero" (home carousel) | "gallery" (media section).
    */
-  listMedia({ lang = 'uz', type = null, limit = 50, offset = 0, signal } = {}) {
-    return request(`/api/v1/media${buildQuery({ lang, type, limit, offset })}`, { signal })
+  listMedia({ lang = 'uz', type = null, placement = null, limit = 50, offset = 0, signal } = {}) {
+    return request(`/api/v1/media${buildQuery({ lang, type, placement, limit, offset })}`, {
+      signal,
+    })
   },
 
   /**
@@ -98,5 +102,60 @@ export const api = {
   /** GET /health — used to verify the backend is reachable. */
   health({ signal } = {}) {
     return request('/health', { signal })
+  },
+}
+
+/**
+ * Admin endpoints. Every call carries the X-Admin-Token header.
+ *
+ * The token is supplied per call rather than held in this module: it belongs to
+ * whoever is signed into the admin page, and passing it explicitly keeps it out
+ * of the bundle's module scope where the public site could reach it.
+ */
+export const adminApi = {
+  /** GET /api/v1/admin/media — every item, hidden ones included. */
+  listMedia(token, { placement = null, limit = 100, signal } = {}) {
+    return request(`/api/v1/admin/media${buildQuery({ placement, limit })}`, {
+      signal,
+      headers: { 'X-Admin-Token': token },
+    })
+  },
+
+  createMedia(token, payload) {
+    return request('/api/v1/admin/media', {
+      method: 'POST',
+      headers: { 'X-Admin-Token': token },
+      body: JSON.stringify(payload),
+    })
+  },
+
+  updateMedia(token, id, payload) {
+    return request(`/api/v1/admin/media/${id}`, {
+      method: 'PATCH',
+      headers: { 'X-Admin-Token': token },
+      body: JSON.stringify(payload),
+    })
+  },
+
+  deleteMedia(token, id) {
+    return request(`/api/v1/admin/media/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Token': token },
+    })
+  },
+
+  /** GET /api/v1/admin/contacts — messages sent through the contact form. */
+  listContacts(token, { limit = 50, signal } = {}) {
+    return request(`/api/v1/admin/contacts${buildQuery({ limit })}`, {
+      signal,
+      headers: { 'X-Admin-Token': token },
+    })
+  },
+
+  markContactRead(token, id) {
+    return request(`/api/v1/admin/contacts/${id}/read`, {
+      method: 'PATCH',
+      headers: { 'X-Admin-Token': token },
+    })
   },
 }
