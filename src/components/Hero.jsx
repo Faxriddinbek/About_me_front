@@ -5,6 +5,17 @@ import { usePrefersReducedMotion } from '../hooks/useReveal'
 const SWIPE_THRESHOLD_PX = 40
 
 /**
+ * Desktop height of the photo frame.
+ *
+ * Driven by the viewport height rather than a fixed width: the frame is the
+ * tallest thing in the hero, so sizing it from `vh` is what guarantees it never
+ * pushes the section past one screen. The width then follows from the 3/4
+ * aspect ratio, and `maxWidth: 50%` keeps the intro copy from being squeezed on
+ * short, wide displays.
+ */
+const FRAME_HEIGHT = 'min(84vh, 900px)'
+
+/**
  * Landing section: an auto-advancing photo carousel beside the intro copy.
  *
  * The carousel cross-fades by stacking every photo and animating opacity, so
@@ -51,11 +62,19 @@ export function Hero({ t, isMobile }) {
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: isMobile ? 24 : 'clamp(32px, 6vw, 80px)',
-        maxWidth: 1240,
+        // space-between anchors the frame to the left edge and the copy to the
+        // right, so neither leaves a dead margin on a wide screen. Centring
+        // instead pooled all the leftover width on the right-hand side.
+        justifyContent: isMobile ? 'center' : 'space-between',
+        gap: isMobile ? 24 : 'clamp(32px, 5vw, 72px)',
+        // Wider than the other sections on purpose: the hero is the only place
+        // with a full-height image beside the copy, and the extra room is what
+        // lets both grow instead of leaving a gap on the right.
+        maxWidth: 1440,
         margin: '0 auto',
-        padding: isMobile ? '100px 20px 40px' : '120px 56px 56px',
+        // Tighter top padding than the other sections: the frame is already
+        // 84vh tall, so 120px on top would push the hero past one screen.
+        padding: isMobile ? '100px 20px 40px' : '96px 56px 56px',
         minHeight: '100vh',
       }}
     >
@@ -66,8 +85,12 @@ export function Hero({ t, isMobile }) {
         style={{
           position: 'relative',
           flex: '0 0 auto',
-          width: isMobile ? '100%' : '40%',
-          maxWidth: isMobile ? 300 : 440,
+          // Only the width is set; aspect-ratio derives the height, so the
+          // frame can never end up stretched. The first term is "as tall as the
+          // viewport allows", the second stops it eating the copy's half on
+          // narrow-but-tall windows — whichever binds first wins.
+          width: isMobile ? '100%' : `min(calc(${FRAME_HEIGHT} * 3 / 4), 46%)`,
+          maxWidth: isMobile ? 320 : undefined,
           aspectRatio: '3 / 4',
         }}
       >
@@ -165,7 +188,7 @@ export function Hero({ t, isMobile }) {
         style={{
           flex: '1 1 auto',
           minWidth: 0,
-          maxWidth: 560,
+          maxWidth: 620,
           textAlign: isMobile ? 'center' : 'left',
           animation: 'fadeup 700ms var(--ease-out) both',
         }}
@@ -214,7 +237,7 @@ export function Hero({ t, isMobile }) {
             fontSize: isMobile ? 15 : 18,
             lineHeight: 1.6,
             color: '#9aa4b1',
-            maxWidth: isMobile ? '100%' : 440,
+            maxWidth: isMobile ? '100%' : 500,
           }}
         >
           {t('subtitle')}
