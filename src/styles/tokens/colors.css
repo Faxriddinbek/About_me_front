@@ -1,0 +1,64 @@
+/* ============================================================
+   COLORS — Terminal Portfolio (GitHub dark + terminal green)
+   Dark mode only. No bright backgrounds, no white sections.
+   ============================================================ */
+:root {
+  /* ---- Base palette ---- */
+  --black:            #010409;   /* deepest, behind everything */
+  --bg:               #0d1117;   /* canvas / page background */
+  --surface:          #161b22;   /* cards, panels, terminal body */
+  --surface-2:        #1c2430;   /* nested surface / hover raise */
+  --surface-3:        #21262d;   /* inputs, code blocks */
+  --overlay:          #0d1117f2; /* modal / sticky header backdrop */
+
+  /* ---- Borders / lines ---- */
+  --border:           #30363d;   /* default hairline */
+  --border-muted:     #21262d;   /* subtle divider */
+  --border-strong:    #3d444d;   /* emphasised edge */
+
+  /* ---- Text ---- */
+  --text:             #e6edf3;   /* primary copy */
+  --text-muted:       #8b949e;   /* secondary / captions */
+  --text-faint:       #5a636d;   /* disabled, placeholders, line numbers */
+  --text-on-accent:   #04130b;   /* text sat on green fills */
+
+  /* ---- Accent: terminal green ---- */
+  --accent:           #00ff88;
+  --accent-dim:       #00cc6e;   /* hover-darken / pressed */
+  --accent-soft:      #00ff8822; /* tinted fills, badge bg */
+  --accent-faint:     #00ff880f; /* very low tint, row hover */
+  --accent-line:      #00ff8855; /* translucent border */
+
+  /* ---- Secondary: link blue ---- */
+  --blue:             #58a6ff;
+  --blue-dim:         #388bfd;
+  --blue-soft:        #58a6ff1f;
+
+  /* ---- Semantic ---- */
+  --success:          #3fb950;
+  --warning:          #d29922;
+  --danger:           #f85149;
+  --danger-soft:      #f851491f;
+
+  /* ---- Terminal traffic lights ---- */
+  --dot-red:          #ff5f56;
+  --dot-amber:        #ffbd2e;
+  --dot-green:        #27c93f;
+
+  /* ---- Tech-stack accent map (chips/icons) ---- */
+  --tech-python:      #ffd43b;
+  --tech-fastapi:     #05998b;
+  --tech-grpc:        #4285f4;
+  --tech-postgres:    #4169e1;
+  --tech-docker:      #2496ed;
+  --tech-redis:       #ff4438;
+
+  /* ---- Semantic aliases (use these in components) ---- */
+  --color-bg:             var(--bg);
+  --surface-card:         var(--surface);
+  --surface-inset:        var(--surface-3);
+  --text-body:            var(--text);
+  --text-secondary:       var(--text-muted);
+  --link:                 var(--blue);
+  --focus-ring:           var(--accent);
+}

@@ -1,0 +1,150 @@
+/* ============================================================
+   Global styles, animations and interactive states.
+
+   Design tokens (colors / fonts / spacing) live in ./styles/tokens/*.css
+   and are imported before this file in main.jsx, so anything declared
+   here intentionally wins.
+
+   Inline styles cannot express :hover / :focus-visible, so every
+   interactive state the design specifies is defined here as a class.
+   ============================================================ */
+
+:root {
+  /* Signature terminal green. The design exposes it as --gr everywhere. */
+  --gr: #4ade80;
+  --gr-soft: rgba(74, 222, 128, 0.12);
+  --gr-line: rgba(74, 222, 128, 0.4);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: #0a0e17;
+  color: #e6edf3;
+  overflow-x: hidden;
+  font-family: var(--font-mono);
+}
+
+a { color: #58a6ff; text-decoration: none; }
+a:hover { color: var(--gr); }
+
+img { max-width: 100%; }
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes aiglow {
+  0%, 100% { box-shadow: 0 0 14px rgba(34, 211, 238, 0.45), 0 0 30px rgba(74, 222, 128, 0.30); }
+  50%      { box-shadow: 0 0 22px rgba(34, 211, 238, 0.85), 0 0 48px rgba(74, 222, 128, 0.55); }
+}
+
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes glowpulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+/* ============================================================
+   Interactive states
+   ============================================================ */
+
+.nav-link:hover { color: var(--gr); }
+
+.lang-btn:focus-visible {
+  outline: 2px solid var(--gr);
+  outline-offset: -2px;
+}
+
+/* Primary green call-to-action */
+.btn-primary:hover {
+  background: #5eea90;
+  box-shadow: 0 0 0 1px var(--gr), 0 10px 28px -6px rgba(74, 222, 128, 0.6);
+}
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:focus-visible { outline: 2px solid var(--gr); outline-offset: 3px; }
+
+/* Secondary outlined call-to-action */
+.btn-ghost:hover {
+  color: var(--gr);
+  border-color: var(--gr);
+  box-shadow: 0 0 20px -4px rgba(74, 222, 128, 0.4);
+}
+.btn-ghost:active { transform: translateY(1px); }
+.btn-ghost:focus-visible { outline: 2px solid var(--gr); outline-offset: 3px; }
+
+/* Project card */
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gr-line);
+  box-shadow: 0 0 24px -6px rgba(74, 222, 128, 0.25);
+}
+.card:focus-visible { outline: 2px solid var(--gr); outline-offset: 2px; }
+
+/* Contact info card */
+.contact-card:hover {
+  border-color: var(--gr-line);
+  box-shadow: 0 0 20px -6px rgba(74, 222, 128, 0.2);
+}
+.contact-card:focus-visible { outline: 2px solid var(--gr); outline-offset: 2px; }
+
+/* Media gallery tile */
+.media-tile:hover {
+  border-color: rgba(74, 222, 128, 0.3);
+  box-shadow: 0 0 20px -6px rgba(74, 222, 128, 0.2);
+}
+
+/* Media filter tab */
+.tab:hover { border-color: var(--gr); color: var(--gr); }
+.tab:focus-visible { outline: 2px solid var(--gr); outline-offset: 2px; }
+
+/* Form fields */
+.field:focus {
+  border-color: var(--gr);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15);
+}
+.field::placeholder { color: #5a636d; }
+
+.send-btn:not(:disabled):hover {
+  background: #5eea90;
+  box-shadow: 0 10px 28px -6px rgba(74, 222, 128, 0.5);
+}
+.send-btn:focus-visible { outline: 2px solid var(--gr); outline-offset: 3px; }
+
+/* Carousel dot */
+.dot:focus-visible { outline: 2px solid var(--gr); outline-offset: 2px; }
+
+/* Floating AI button */
+.ai-btn:focus-visible { outline: 2px solid var(--gr); outline-offset: 4px; }
+
+/* Loading skeleton — a shimmering placeholder while data is in flight */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #161b22 0%,
+    #1c2430 40%,
+    #161b22 80%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s linear infinite;
+}

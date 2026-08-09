@@ -1,0 +1,55 @@
+/* ============================================================
+   EFFECTS — shadows, glows, transitions, motion
+   The terminal-green glow is the signature interaction.
+   ============================================================ */
+:root {
+  /* ---- Elevation shadows (subtle on dark) ---- */
+  --shadow-xs:  0 1px 2px rgba(1, 4, 9, 0.5);
+  --shadow-sm:  0 2px 6px rgba(1, 4, 9, 0.55);
+  --shadow-md:  0 8px 24px rgba(1, 4, 9, 0.6);
+  --shadow-lg:  0 16px 48px rgba(1, 4, 9, 0.7);
+
+  /* ---- Green glow (hover / focus signature) ---- */
+  --glow-accent:        0 0 0 1px var(--accent-line), 0 0 16px -2px var(--accent-soft);
+  --glow-accent-strong: 0 0 0 1px var(--accent), 0 0 24px -4px rgba(0, 255, 136, 0.45);
+  --glow-text:          0 0 12px rgba(0, 255, 136, 0.45);
+  --glow-blue:          0 0 16px -2px rgba(88, 166, 255, 0.4);
+
+  /* ---- Focus ring ---- */
+  --ring:        0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  /* ---- Inset / inner ---- */
+  --inset-top:   inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+  /* ---- Motion ---- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast:    120ms; /* @kind other */
+  --dur:         200ms; /* @kind other */
+  --dur-slow:    360ms; /* @kind other */
+  --transition:  var(--dur) var(--ease-out); /* @kind other */
+
+  /* ---- Caret / cursor blink ---- */
+  --blink:       1.1s step-end infinite; /* @kind other */
+
+  /* ---- Background textures ---- */
+  --grid-line:   rgba(255, 255, 255, 0.02);
+  --scanline:    rgba(0, 255, 136, 0.015);
+}
+
+/* Signature cursor blink used by terminal prompts */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* Subtle entrance for content blocks */
+@keyframes term-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent-line), 0 0 10px -4px var(--accent-soft); }
+  50%      { box-shadow: 0 0 0 1px var(--accent), 0 0 20px -2px rgba(0,255,136,0.4); }
+}

@@ -1,0 +1,62 @@
+/* ============================================================
+   BASE — element defaults, resets, terminal canvas
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--text-default);
+  font-feature-settings: "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings inherit the mono family; tighten tracking */
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: var(--text);
+}
+
+p { margin: 0; line-height: var(--lh-normal); }
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover { color: var(--accent); }
+
+code, pre, kbd { font-family: var(--font-mono); }
+
+::selection { background: var(--accent-soft); color: var(--text); }
+
+/* Terminal-style thin scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  border: 3px solid var(--bg);
+}
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* Reusable utility: the green-glow focus state */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* Reusable dotted-grid backdrop for terminal pages */
+.term-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
