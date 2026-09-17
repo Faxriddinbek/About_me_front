@@ -113,9 +113,14 @@ export const api = {
  * of the bundle's module scope where the public site could reach it.
  */
 export const adminApi = {
-  /** GET /api/v1/admin/media — every item, hidden ones included. */
-  listMedia(token, { placement = null, limit = 100, signal } = {}) {
-    return request(`/api/v1/admin/media${buildQuery({ placement, limit })}`, {
+  /**
+   * GET /api/v1/admin/media — one page of every item, hidden ones included.
+   *
+   * The panel walks the table page by page, so `offset` matters here as much
+   * as `limit`: without it everything past the first page was unreachable.
+   */
+  listMedia(token, { placement = null, limit = 20, offset = 0, signal } = {}) {
+    return request(`/api/v1/admin/media${buildQuery({ placement, limit, offset })}`, {
       signal,
       headers: { 'X-Admin-Token': token },
     })

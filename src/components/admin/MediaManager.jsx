@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { adminApi } from '../../api/client'
 import { useApiResource } from '../../hooks/useApiResource'
 import { describeMedia } from '../../lib/video'
@@ -11,6 +11,10 @@ const FILTERS = [
   { key: 'hero', label: 'Home karusel' },
   { key: 'gallery', label: 'Galereya' },
 ]
+
+// Rows are tall (84px thumbnail each), so a page is sized to stay scannable
+// rather than to fill the screen.
+const PAGE_SIZE = 20
 
 function Thumb({ item }) {
   const media = describeMedia(item)
@@ -112,14 +116,58 @@ function Row({ item, onEdit, onDelete, busy }) {
 }
 
 /**
+ * Previous / next controls plus the position of the open page in the table.
+ *
+ * The count is not decoration: it is the only way to tell "this is everything"
+ * apart from "there is more below", now that the list is no longer fetched
+ * whole.
+ */
+function Pager({ page, lastPage, shown, total, busy, onChange }) {
+  const first = page * PAGE_SIZE + 1
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      {/* Two equal halves of one row: on a phone each stays a full-size target
+          instead of collapsing into a pair of narrow pills. */}
+      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 420 }}>
+        <Button
+          variant="ghost"
+          style={{ flex: 1, minHeight: 42 }}
+          onClick={() => onChange(page - 1)}
+          disabled={busy || page === 0}
+        >
+          ← Oldingi
+        </Button>
+        <Button
+          variant="ghost"
+          style={{ flex: 1, minHeight: 42 }}
+          onClick={() => onChange(page + 1)}
+          disabled={busy || page >= lastPage}
+        >
+          Keyingi →
+        </Button>
+      </div>
+      <span style={{ fontSize: 12, color: MUTED, fontFamily: 'var(--font-mono)' }}>
+        {first}–{first + shown - 1} / jami {total} ta · sahifa {page + 1}/{lastPage + 1}
+      </span>
+    </div>
+  )
+}
+
+/**
  * Media CRUD screen.
  *
  * Deletion asks for confirmation inline rather than through window.confirm:
  * a native dialog blocks the whole page, and in an embedded browser session it
  * can freeze the tab entirely.
+ *
+ * The list is paged rather than fetched whole — the endpoint caps a request at
+ * 100 items, which used to make everything after the hundredth row invisible
+ * to the panel that is supposed to manage it.
  */
 export function MediaManager({ token }) {
   const [filter, setFilter] = useState(null)
+  const [page, setPage] = useState(0)
   const [editing, setEditing] = useState(null) // null | {} (new) | item
   const [pendingDelete, setPendingDelete] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -127,12 +175,32 @@ export function MediaManager({ token }) {
   const [notice, setNotice] = useState(null)
 
   const fetcher = useCallback(
-    (signal) => adminApi.listMedia(token, { placement: filter, signal }),
-    [token, filter],
+    (signal) =>
+      adminApi.listMedia(token, {
+        placement: filter,
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+        signal,
+      }),
+    [token, filter, page],
   )
-  const { data, status, error: loadError, reload } = useApiResource(fetcher, [token, filter])
+  const {
+    data,
+    status,
+    error: loadError,
+    reload,
+  } = useApiResource(fetcher, [token, filter, page])
 
   const items = data?.items ?? []
+  const total = data?.total ?? 0
+  const lastPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1)
+
+  // Deleting the last row of a page would leave the panel on a page that no
+  // longer exists. Stepping back to the last real one keeps the open page
+  // working instead of showing an empty list.
+  useEffect(() => {
+    if (status === 'success' && page > lastPage) setPage(lastPage)
+  }, [status, page, lastPage])
 
   const run = async (action, successMessage) => {
     setBusy(true)
@@ -165,7 +233,11 @@ export function MediaManager({ token }) {
           <Button
             key={tab.label}
             variant={filter === tab.key ? 'primary' : 'ghost'}
-            onClick={() => setFilter(tab.key)}
+            onClick={() => {
+              setFilter(tab.key)
+              // A page number from the previous filter means nothing here.
+              setPage(0)
+            }}
           >
             {tab.label}
           </Button>
@@ -232,6 +304,19 @@ export function MediaManager({ token }) {
           onDelete={setPendingDelete}
         />
       ))}
+
+      {/* Keyed off the rows on screen rather than the total: right after a
+          delete the refetch can briefly leave the page number past the end. */}
+      {items.length > 0 && (
+        <Pager
+          page={page}
+          lastPage={lastPage}
+          shown={items.length}
+          total={total}
+          busy={status === 'loading'}
+          onChange={setPage}
+        />
+      )}
     </div>
   )
 }
