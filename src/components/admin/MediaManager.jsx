@@ -73,12 +73,22 @@ function Thumb({ item }) {
   )
 }
 
+// Wrapping matters on a phone: without it the buttons keep their width and
+// ride over the url and the meta line instead of dropping below them.
 function Row({ item, onEdit, onDelete, busy }) {
   return (
-    <Card style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 12 }}>
+    <Card
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 14,
+        alignItems: 'center',
+        padding: 12,
+      }}
+    >
       <Thumb item={item} />
 
-      <div style={{ minWidth: 0, flex: 1 }}>
+      <div style={{ minWidth: 0, flex: '1 1 200px' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
           <strong style={{ fontSize: 14 }}>{item.title_uz || '(sarlavhasiz)'}</strong>
           <span style={{ fontSize: 11, color: MUTED }}>#{item.id}</span>
@@ -103,7 +113,7 @@ function Row({ item, onEdit, onDelete, busy }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 'auto' }}>
         <Button variant="ghost" onClick={() => onEdit(item)} disabled={busy}>
           Tahrirlash
         </Button>
