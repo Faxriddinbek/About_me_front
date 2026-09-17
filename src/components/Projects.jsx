@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 import { api } from '../api/client'
-import { useApiResource } from '../hooks/useApiResource'
-import { EmptyState, SectionHeader } from './SectionHeader'
+import { usePagedResource } from '../hooks/usePagedResource'
+import { EmptyState, LoadMore, SectionHeader } from './SectionHeader'
+
+// 12 divides evenly into the 1-, 2- and 3-column layouts the grid uses.
+const PAGE_SIZE = 12
 
 /** Placeholder card shown while the request is in flight. */
 function SkeletonCard() {
@@ -107,15 +110,26 @@ function ProjectCard({ project }) {
  *
  * The backend already resolves title/description into the requested language,
  * so changing `lang` simply re-fetches instead of doing client-side lookups.
+ *
+ * Cards arrive a page at a time, for the same reason the gallery does: one
+ * request can never return more than the backend's 100-item cap.
  */
 export function Projects({ t, lang, isMobile, isTablet, revealed }) {
   const fetcher = useCallback(
-    (signal) => api.listProjects({ lang, limit: 50, signal }),
+    ({ limit, offset, signal }) => api.listProjects({ lang, limit, offset, signal }),
     [lang],
   )
-  const { data, status, error, reload } = useApiResource(fetcher, [lang])
-
-  const projects = data?.items ?? []
+  const {
+    items: projects,
+    total,
+    status,
+    error,
+    moreStatus,
+    moreError,
+    hasMore,
+    loadMore,
+    reload,
+  } = usePagedResource(fetcher, [lang], { pageSize: PAGE_SIZE })
   const gridColumns = isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'
 
   return (
@@ -166,6 +180,18 @@ export function Projects({ t, lang, isMobile, isTablet, revealed }) {
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
+      )}
+
+      {hasMore && (
+        <LoadMore
+          loaded={projects.length}
+          total={total}
+          status={moreStatus}
+          error={moreError}
+          label={t('loadMore')}
+          loadingLabel={t('loadingMore')}
+          onLoadMore={loadMore}
+        />
       )}
     </section>
   )

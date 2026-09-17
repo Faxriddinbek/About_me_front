@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react'
 import { api } from '../api/client'
-import { useApiResource } from '../hooks/useApiResource'
+import { usePagedResource } from '../hooks/usePagedResource'
 import { describeMedia } from '../lib/video'
-import { EmptyState, SectionHeader } from './SectionHeader'
+import { EmptyState, LoadMore, SectionHeader } from './SectionHeader'
 
 // `null` means "no filter" — the backend's ?type= is simply omitted.
 const FILTERS = [
@@ -10,6 +10,10 @@ const FILTERS = [
   { key: 'photo', labelKey: 'medPhotos' },
   { key: 'video', labelKey: 'medVideos' },
 ]
+
+// 24 divides evenly into both the 2-column (phone) and the 3-column grid,
+// so a freshly loaded page never lands as a ragged half-row.
+const PAGE_SIZE = 24
 
 function PlayBadge() {
   return (
@@ -165,6 +169,11 @@ function MediaTile({ item }) {
  *
  * Filtering happens server-side via ?type=, so switching tabs re-fetches rather
  * than filtering a partial page that pagination may have truncated.
+ *
+ * The grid loads a page at a time and grows on demand. Requesting everything
+ * up front would mean a slower and slower page as the gallery fills up — and
+ * the backend caps a request at 100 items regardless, so beyond that the tail
+ * was simply unreachable.
  */
 export function Media({ t, lang, isMobile, revealed }) {
   const [filter, setFilter] = useState(null)
@@ -172,13 +181,12 @@ export function Media({ t, lang, isMobile, revealed }) {
   // placement=gallery keeps the home-page carousel's photos out of the grid;
   // they are managed in the same table but belong to a different surface.
   const fetcher = useCallback(
-    (signal) =>
-      api.listMedia({ lang, type: filter, placement: 'gallery', limit: 50, signal }),
+    ({ limit, offset, signal }) =>
+      api.listMedia({ lang, type: filter, placement: 'gallery', limit, offset, signal }),
     [lang, filter],
   )
-  const { data, status, error, reload } = useApiResource(fetcher, [lang, filter])
-
-  const items = data?.items ?? []
+  const { items, total, status, error, moreStatus, moreError, hasMore, loadMore, reload } =
+    usePagedResource(fetcher, [lang, filter], { pageSize: PAGE_SIZE })
   const gridColumns = isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'
 
   return (
@@ -261,6 +269,18 @@ export function Media({ t, lang, isMobile, revealed }) {
             <MediaTile key={item.id} item={item} />
           ))}
         </div>
+      )}
+
+      {hasMore && (
+        <LoadMore
+          loaded={items.length}
+          total={total}
+          status={moreStatus}
+          error={moreError}
+          label={t('loadMore')}
+          loadingLabel={t('loadingMore')}
+          onLoadMore={loadMore}
+        />
       )}
     </section>
   )

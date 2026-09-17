@@ -47,6 +47,8 @@ export const translations = {
     medError: 'Mediani yuklab bo‘lmadi',
 
     retry: 'Qayta urinish',
+    loadMore: 'Yana yuklash',
+    loadingMore: 'Yuklanmoqda…',
   },
 
   en: {
@@ -87,6 +89,8 @@ export const translations = {
     medError: 'Could not load media',
 
     retry: 'Retry',
+    loadMore: 'Load more',
+    loadingMore: 'Loading…',
   },
 }
 

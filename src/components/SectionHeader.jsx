@@ -81,3 +81,60 @@ export function EmptyState({ message, actionLabel, onAction }) {
     </div>
   )
 }
+
+/**
+ * "Load more" footer for the sections that page through the API.
+ *
+ * The count sits under the button rather than in a line of its own: how much
+ * is left is exactly what tells a visitor whether pressing it is worth it.
+ */
+export function LoadMore({ loaded, total, status, error, label, loadingLabel, onLoadMore }) {
+  const loading = status === 'loading'
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 32,
+      }}
+    >
+      {status === 'error' && (
+        <p role="alert" style={{ margin: 0, fontSize: 13, color: '#f85149', textAlign: 'center' }}>
+          {error?.message}
+        </p>
+      )}
+      <button
+        type="button"
+        className="btn-ghost"
+        onClick={onLoadMore}
+        disabled={loading}
+        style={{
+          // Full width on a phone — a narrow centred pill is an awkward target
+          // — but capped so it stays a button on a wide screen.
+          width: '100%',
+          maxWidth: 320,
+          minHeight: 46,
+          padding: '0 24px',
+          borderRadius: 10,
+          background: 'transparent',
+          border: '1px solid rgba(255,255,255,0.22)',
+          color: '#e6edf3',
+          fontSize: 14,
+          fontWeight: 600,
+          fontFamily: 'var(--font-mono)',
+          cursor: loading ? 'progress' : 'pointer',
+          opacity: loading ? 0.6 : 1,
+          transition: 'border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
+        }}
+      >
+        {loading ? loadingLabel : label}
+      </button>
+      <span style={{ fontSize: 12, color: '#5a636d', fontFamily: 'var(--font-mono)' }}>
+        {loaded} / {total}
+      </span>
+    </div>
+  )
+}
