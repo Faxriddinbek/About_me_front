@@ -49,8 +49,17 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
     setError(null)
     setProgress(0)
     try {
-      const url = await uploadImage(file, token, { onProgress: setProgress })
-      setForm((previous) => ({ ...previous, url, media_type: 'photo' }))
+      // Two files come back: the small one is what a gallery tile loads, so it
+      // goes straight into thumbnail_url rather than waiting to be typed in.
+      const { url, thumbnailUrl } = await uploadImage(file, token, {
+        onProgress: setProgress,
+      })
+      setForm((previous) => ({
+        ...previous,
+        url,
+        thumbnail_url: thumbnailUrl ?? '',
+        media_type: 'photo',
+      }))
     } catch (uploadError) {
       setError(uploadError.message)
     } finally {
@@ -94,12 +103,15 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
         {/* --- 1. upload --- */}
         <Field
           label="1) Rasm yuklash"
-          hint={`jpg, png, webp, gif, avif, svg — maksimum ${MAX_UPLOAD_MB} MB`}
+          hint={
+            `jpg, png, webp, gif — maksimum ${MAX_UPLOAD_MB} MB. ` +
+            'Rasm serverda avtomatik kichraytiriladi va WebP ga o‘giriladi.'
+          }
         >
           <input
             ref={fileInput}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             disabled={uploading || busy}
             onChange={handleFile}
             style={{ ...inputStyle, padding: 8, cursor: 'pointer' }}
@@ -187,7 +199,7 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
 
         <Field
           label="Muqova rasmi (ixtiyoriy)"
-          hint="Video uchun oldindan ko‘rsatiladigan rasm. YouTube uchun bo‘sh qoldiring — avtomatik olinadi."
+          hint="Rasm yuklaganda avtomatik to‘ladi (kichik nusxa). YouTube uchun bo‘sh qoldiring — muqova avtomatik olinadi."
         >
           <input
             type="url"
