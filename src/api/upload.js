@@ -23,7 +23,11 @@ export class UploadError extends Error {
 }
 
 /**
- * Upload one image and resolve with its URL path.
+ * Upload one image and resolve with both of the URLs it produced.
+ *
+ * The backend re-encodes every upload into two WebP files — a full-size one and
+ * a thumbnail — so a gallery tile downloads a few dozen kilobytes instead of
+ * the original photo. Both belong on the media item.
  *
  * XMLHttpRequest rather than fetch: it is the only way to observe upload
  * progress, and a multi-megabyte upload with no progress bar looks frozen.
@@ -31,6 +35,7 @@ export class UploadError extends Error {
  * @param file       the File from an <input type="file">
  * @param token      admin token, sent as X-Admin-Token
  * @param onProgress called with 0..100 as the upload proceeds
+ * @returns {Promise<{url: string, thumbnailUrl: string}>}
  */
 export function uploadImage(file, token, { onProgress } = {}) {
   const body = new FormData()
@@ -57,7 +62,7 @@ export function uploadImage(file, token, { onProgress } = {}) {
       }
 
       if (request.status >= 200 && request.status < 300) {
-        resolve(payload.url)
+        resolve({ url: payload.url, thumbnailUrl: payload.thumbnail_url })
         return
       }
 

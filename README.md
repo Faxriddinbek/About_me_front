@@ -82,9 +82,13 @@ account, no keys.
 
 A hosted image CDN would normally be the better choice, but Cloudinary and its
 peers block sign-ups from Uzbekistan, so the API stores the files itself. It
-accepts image extensions only, up to **15 MB**. In production `UPLOAD_DIR` must
-point at a persistent volume or every deploy wipes the images — see the
-backend's `.env.example`.
+accepts jpg, png, webp and gif up to **15 MB** (not SVG — it can carry script).
+
+Nothing is stored as uploaded: the backend re-encodes each image into a
+full-size and a thumbnail WebP and returns both URLs. The form fills `url` and
+`thumbnail_url` from that in one step, and the gallery loads the thumbnail for
+its tiles — which is why a page of photos stays light. Camera metadata,
+location included, is dropped in the same pass.
 
 ### Videos
 
