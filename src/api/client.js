@@ -39,13 +39,17 @@ function buildQuery(params) {
   return query ? `?${query}` : ''
 }
 
-async function request(path, { signal, ...options } = {}) {
+async function request(path, { signal, headers, ...options } = {}) {
   let response
   try {
     response = await fetch(`${BASE}${path}`, {
       signal,
-      headers: { 'Content-Type': 'application/json', ...options.headers },
       ...options,
+      // Headers are merged last, and from the destructured `headers` rather
+      // than from `options`: spreading `options` over a `headers` key replaces
+      // the whole object instead of merging into it, which is how every admin
+      // write used to lose its Content-Type and reach the API as text/plain.
+      headers: { 'Content-Type': 'application/json', ...headers },
     })
   } catch (cause) {
     // fetch only rejects on network-level failures (server down, DNS, CORS).
