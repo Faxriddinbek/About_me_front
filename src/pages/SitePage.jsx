@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AiButton } from '../components/AiButton'
+import { AiChat } from '../components/AiChat'
 import { Contact } from '../components/Contact'
 import { Hero } from '../components/Hero'
 import { MatrixRain } from '../components/MatrixRain'
@@ -24,6 +25,8 @@ function initialLang() {
 /** The public one-page site. */
 export function SitePage() {
   const [lang, setLang] = useState(initialLang)
+  const [chatOpen, setChatOpen] = useState(false)
+  const closeChat = useCallback(() => setChatOpen(false), [])
   const { isMobile, isTablet } = useBreakpoint()
   const activeSection = useScrollSpy(SECTION_IDS)
   const revealed = useReveal(SECTION_IDS)
@@ -70,7 +73,11 @@ export function SitePage() {
 
       <Media t={t} lang={lang} isMobile={isMobile} revealed={revealed.has('media')} />
 
-      <AiButton isMobile={isMobile} />
+      {chatOpen ? (
+        <AiChat t={t} lang={lang} isMobile={isMobile} onClose={closeChat} />
+      ) : (
+        <AiButton isMobile={isMobile} onClick={() => setChatOpen(true)} />
+      )}
     </div>
   )
 }
