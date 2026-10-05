@@ -12,7 +12,8 @@ export const CONTACT = {
   // Personal account, not the @faxriddinbek channel — the link opens a chat.
   telegram: '@XXXacer_004',
   github: 'Faxriddinbek',
-  linkedin: 'faxriddinbek',
+  // The public-profile slug from linkedin.com/in/<slug>.
+  linkedin: 'faxriddin-orinboyev-418961299',
   instagram: 'faxriddinbek_202',
 }
 

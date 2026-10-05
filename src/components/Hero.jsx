@@ -15,7 +15,7 @@ const SWIPE_THRESHOLD_PX = 40
  * aspect ratio, and `maxWidth: 50%` keeps the intro copy from being squeezed on
  * short, wide displays.
  */
-const FRAME_HEIGHT = 'min(84vh, 900px)'
+const FRAME_HEIGHT = 'calc(100vh - 72px)'
 
 /** Edge fade for the hero photos — see where it is applied. */
 const PHOTO_MASK = [
@@ -94,16 +94,15 @@ export function Hero({ t, lang, isMobile }) {
         // space-between anchors the frame to the left edge and the copy to the
         // right, so neither leaves a dead margin on a wide screen. Centring
         // instead pooled all the leftover width on the right-hand side.
-        justifyContent: isMobile ? 'center' : 'space-between',
-        gap: isMobile ? 24 : 'clamp(32px, 5vw, 72px)',
-        // Wider than the other sections on purpose: the hero is the only place
-        // with a full-height image beside the copy, and the extra room is what
-        // lets both grow instead of leaving a gap on the right.
-        maxWidth: 1440,
-        margin: '0 auto',
-        // Tighter top padding than the other sections: the frame is already
-        // 84vh tall, so 120px on top would push the hero past one screen.
-        padding: isMobile ? '100px 20px 40px' : '96px 56px 56px',
+        justifyContent: isMobile ? 'flex-start' : 'space-between',
+        gap: isMobile ? 28 : 'clamp(32px, 5vw, 72px)',
+        // Full-bleed: the photo sits flush against the top-left corner (just
+        // under the 72px nav) and the copy is pushed to the right-hand side.
+        // The photo's feathered edges are what make touching the viewport edge
+        // look intentional rather than cropped.
+        width: '100%',
+        margin: 0,
+        padding: isMobile ? '64px 0 40px' : '72px 0 0 0',
         minHeight: '100vh',
       }}
     >
@@ -118,9 +117,12 @@ export function Hero({ t, lang, isMobile }) {
           // frame can never end up stretched. The first term is "as tall as the
           // viewport allows", the second stops it eating the copy's half on
           // narrow-but-tall windows — whichever binds first wins.
-          width: isMobile ? '100%' : `min(calc(${FRAME_HEIGHT} * 3 / 4), 46%)`,
-          maxWidth: isMobile ? 320 : undefined,
-          aspectRatio: '3 / 4',
+          // Desktop: as tall as the screen below the nav allows, capped at half
+          // the width so the copy keeps its side. Phone: the full width.
+          width: isMobile ? '100%' : `min(calc(${FRAME_HEIGHT} * 4 / 5), 52%)`,
+          maxWidth: isMobile ? 560 : undefined,
+          alignSelf: isMobile ? 'center' : 'flex-start',
+          aspectRatio: '4 / 5',
         }}
       >
         {/* Green rim light behind the subject */}
@@ -220,9 +222,14 @@ export function Hero({ t, lang, isMobile }) {
       {/* --- intro copy --- */}
       <div
         style={{
-          flex: '1 1 auto',
+          flex: '0 1 620px',
           minWidth: 0,
           maxWidth: 620,
+          // Pushed to the right edge on desktop, with breathing room after it.
+          marginLeft: isMobile ? 0 : 'auto',
+          marginRight: isMobile ? 0 : 'clamp(24px, 6vw, 120px)',
+          padding: isMobile ? '0 20px' : 0,
+          alignSelf: 'center',
           textAlign: isMobile ? 'center' : 'left',
           animation: 'fadeup 700ms var(--ease-out) both',
         }}

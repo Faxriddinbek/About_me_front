@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { api } from '../api/client'
 import { usePagedResource } from '../hooks/usePagedResource'
 import { describeMedia } from '../lib/video'
+import { Lightbox } from './Lightbox'
 import { EmptyState, LoadMore, SectionHeader } from './SectionHeader'
 
 // `null` means "no filter" — the backend's ?type= is simply omitted.
@@ -41,7 +42,7 @@ function PlayBadge() {
   )
 }
 
-function MediaTile({ item }) {
+function MediaTile({ item, onOpen }) {
   const [playing, setPlaying] = useState(false)
   const media = describeMedia(item)
   const isVideo = media.kind !== 'image'
@@ -145,10 +146,17 @@ function MediaTile({ item }) {
   )
 
   if (!isVideo) {
+    // A photo opens the full-size lightbox; the tile only shows the thumbnail.
     return (
-      <div className="media-tile" style={frameStyle}>
+      <button
+        type="button"
+        className="media-tile"
+        onClick={onOpen}
+        aria-label={item.title ? `${item.title} — kattalashtirish` : 'Rasmni kattalashtirish'}
+        style={{ ...frameStyle, padding: 0, cursor: 'zoom-in', display: 'block', width: '100%' }}
+      >
         {content}
-      </div>
+      </button>
     )
   }
 
@@ -189,6 +197,14 @@ export function Media({ t, lang, isMobile, revealed }) {
   const { items, total, status, error, moreStatus, moreError, hasMore, loadMore, reload } =
     usePagedResource(fetcher, [lang, filter], { pageSize: PAGE_SIZE })
   const gridColumns = isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'
+
+  // Only photos go into the lightbox; videos play in place.
+  const photos = useMemo(
+    () => items.filter((item) => describeMedia(item).kind === 'image'),
+    [items],
+  )
+  const [openIndex, setOpenIndex] = useState(null)
+  const closeLightbox = useCallback(() => setOpenIndex(null), [])
 
   return (
     <section
@@ -267,7 +283,11 @@ export function Media({ t, lang, isMobile, revealed }) {
       {status === 'success' && items.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: gridColumns, gap: 16 }}>
           {items.map((item) => (
-            <MediaTile key={item.id} item={item} />
+            <MediaTile
+              key={item.id}
+              item={item}
+              onOpen={() => setOpenIndex(photos.findIndex((photo) => photo.id === item.id))}
+            />
           ))}
         </div>
       )}
@@ -281,6 +301,15 @@ export function Media({ t, lang, isMobile, revealed }) {
           label={t('loadMore')}
           loadingLabel={t('loadingMore')}
           onLoadMore={loadMore}
+        />
+      )}
+
+      {openIndex !== null && photos[openIndex] && (
+        <Lightbox
+          photos={photos}
+          index={openIndex}
+          onIndexChange={setOpenIndex}
+          onClose={closeLightbox}
         />
       )}
     </section>
