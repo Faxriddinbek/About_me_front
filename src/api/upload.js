@@ -1,19 +1,33 @@
 /**
- * Uploading images to our own backend.
+ * Uploading images and videos to our own backend.
  *
- * The obvious answer would be a hosted image service, but Cloudinary and its
- * peers refuse sign-ups from Uzbekistan, so the API stores the files itself and
+ * The obvious answer would be a hosted service, but Cloudinary and its peers
+ * refuse sign-ups from Uzbekistan, so the API stores the files itself and
  * serves them back from /api/v1/files/.
  *
- * Videos deliberately do not go through here: the backend caps uploads at
- * 15 MB, and a real video needs adaptive streaming, not a single file download.
- * Paste a YouTube link for those — the gallery renders it as a player.
+ * Images are re-encoded server-side into two WebP sizes. Videos (mp4, webm,
+ * mov) are stored unchanged and served with HTTP Range support, so the
+ * browser's <video> player can seek without downloading the whole file.
  */
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
 /** Kept in step with MAX_UPLOAD_MB in the backend's settings. */
 export const MAX_UPLOAD_MB = 15
+
+/** Kept in step with MAX_VIDEO_UPLOAD_MB in the backend's settings. */
+export const MAX_VIDEO_UPLOAD_MB = 2048
+
+export const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
+export const VIDEO_ACCEPT = 'video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov'
+
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov']
+
+/** Whether a picked File is a video, judged the same way the backend does: by extension. */
+export function isVideoFile(file) {
+  const name = file?.name?.toLowerCase() ?? ''
+  return VIDEO_EXTENSIONS.some((extension) => name.endsWith(extension))
+}
 
 export class UploadError extends Error {
   constructor(message) {
@@ -23,11 +37,12 @@ export class UploadError extends Error {
 }
 
 /**
- * Upload one image and resolve with both of the URLs it produced.
+ * Upload one image or video and resolve with where it now lives.
  *
- * The backend re-encodes every upload into two WebP files — a full-size one and
- * a thumbnail — so a gallery tile downloads a few dozen kilobytes instead of
- * the original photo. Both belong on the media item.
+ * For an image the backend returns two WebP files — a full-size one and a
+ * thumbnail — so a gallery tile downloads a few dozen kilobytes instead of the
+ * original photo. A video comes back with `thumbnailUrl: null`; give it a cover
+ * by uploading an image separately.
  *
  * XMLHttpRequest rather than fetch: it is the only way to observe upload
  * progress, and a multi-megabyte upload with no progress bar looks frozen.
@@ -35,9 +50,17 @@ export class UploadError extends Error {
  * @param file       the File from an <input type="file">
  * @param token      admin token, sent as X-Admin-Token
  * @param onProgress called with 0..100 as the upload proceeds
- * @returns {Promise<{url: string, thumbnailUrl: string}>}
+ * @returns {Promise<{url: string, thumbnailUrl: string|null, mediaType: 'photo'|'video'}>}
  */
-export function uploadImage(file, token, { onProgress } = {}) {
+export function uploadFile(file, token, { onProgress } = {}) {
+  // Checked here as well as on the server so a 3 GB mistake fails instantly
+  // instead of after twenty minutes of uploading.
+  const video = isVideoFile(file)
+  const limitMb = video ? MAX_VIDEO_UPLOAD_MB : MAX_UPLOAD_MB
+  if (file.size > limitMb * 1024 * 1024) {
+    return Promise.reject(new UploadError(`Fayl juda katta — maksimum ${limitMb} MB.`))
+  }
+
   const body = new FormData()
   body.append('file', file)
 
@@ -62,7 +85,11 @@ export function uploadImage(file, token, { onProgress } = {}) {
       }
 
       if (request.status >= 200 && request.status < 300) {
-        resolve({ url: payload.url, thumbnailUrl: payload.thumbnail_url })
+        resolve({
+          url: payload.url,
+          thumbnailUrl: payload.thumbnail_url ?? null,
+          mediaType: payload.media_type ?? (video ? 'video' : 'photo'),
+        })
         return
       }
 
@@ -77,3 +104,6 @@ export function uploadImage(file, token, { onProgress } = {}) {
     request.send(body)
   })
 }
+
+/** Kept for callers written when only images could be uploaded. */
+export const uploadImage = uploadFile
