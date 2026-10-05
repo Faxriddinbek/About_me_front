@@ -1,5 +1,11 @@
 import { useRef, useState } from 'react'
-import { MAX_UPLOAD_MB, uploadImage } from '../../api/upload'
+import {
+  IMAGE_ACCEPT,
+  MAX_UPLOAD_MB,
+  MAX_VIDEO_UPLOAD_MB,
+  uploadFile,
+  VIDEO_ACCEPT,
+} from '../../api/upload'
 import { youtubeId } from '../../lib/video'
 import { inputStyle, MUTED } from './tokens'
 import { Banner, Button, Card, Field } from './ui'
@@ -18,11 +24,12 @@ const EMPTY = {
 /**
  * Create or edit one media item.
  *
- * A URL can arrive two ways: uploaded to our backend, or pasted. Both exist
- * because uploads are capped at 15 MB and images only — a real video belongs on
- * YouTube, which streams adaptively instead of forcing a full download. The
- * stored row is identical either way, so nothing downstream cares which path
- * produced the URL.
+ * A URL can arrive two ways: uploaded to our backend (images and videos), or
+ * pasted (an external image or a YouTube link). The stored row is identical
+ * either way, so nothing downstream cares which path produced the URL.
+ *
+ * A video has no generated thumbnail, so the form offers a second upload for
+ * its cover image.
  */
 export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
   const [form, setForm] = useState(() => ({
@@ -35,6 +42,7 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState(null)
   const fileInput = useRef(null)
+  const coverInput = useRef(null)
 
   const set = (field) => (event) => {
     const value =
@@ -49,16 +57,17 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
     setError(null)
     setProgress(0)
     try {
-      // Two files come back: the small one is what a gallery tile loads, so it
-      // goes straight into thumbnail_url rather than waiting to be typed in.
-      const { url, thumbnailUrl } = await uploadImage(file, token, {
+      // For an image two files come back: the small one is what a gallery
+      // tile loads, so it goes straight into thumbnail_url. A video has none,
+      // so any cover already chosen is kept.
+      const { url, thumbnailUrl, mediaType } = await uploadFile(file, token, {
         onProgress: setProgress,
       })
       setForm((previous) => ({
         ...previous,
         url,
-        thumbnail_url: thumbnailUrl ?? '',
-        media_type: 'photo',
+        thumbnail_url: mediaType === 'video' ? previous.thumbnail_url : thumbnailUrl ?? '',
+        media_type: mediaType,
       }))
     } catch (uploadError) {
       setError(uploadError.message)
@@ -69,10 +78,28 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
     }
   }
 
+  const handleCover = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setError(null)
+    setProgress(0)
+    try {
+      // The thumbnail size is plenty for a poster frame and loads fast.
+      const { url, thumbnailUrl } = await uploadFile(file, token, { onProgress: setProgress })
+      setForm((previous) => ({ ...previous, thumbnail_url: thumbnailUrl ?? url }))
+    } catch (uploadError) {
+      setError(uploadError.message)
+    } finally {
+      setProgress(null)
+      if (coverInput.current) coverInput.current.value = ''
+    }
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     if (!form.url.trim()) {
-      setError('Avval rasm yuklang yoki havola qo‘ying.')
+      setError('Avval rasm yoki video yuklang, yoki havola qo‘ying.')
       return
     }
     setError(null)
@@ -102,16 +129,17 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
 
         {/* --- 1. upload --- */}
         <Field
-          label="1) Rasm yuklash"
+          label="1) Rasm yoki video yuklash"
           hint={
-            `jpg, png, webp, gif — maksimum ${MAX_UPLOAD_MB} MB. ` +
-            'Rasm serverda avtomatik kichraytiriladi va WebP ga o‘giriladi.'
+            `Rasm: jpg, png, webp, gif — maksimum ${MAX_UPLOAD_MB} MB (WebP ga o‘giriladi). ` +
+            `Video: mp4, webm, mov — maksimum ${MAX_VIDEO_UPLOAD_MB} MB, serverga o‘zgarishsiz saqlanadi. ` +
+            'iPhone .mov (HEVC) Chrome’da ochilmasligi mumkin — MP4 ga eksport qiling.'
           }
         >
           <input
             ref={fileInput}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept={`${IMAGE_ACCEPT},${VIDEO_ACCEPT}`}
             disabled={uploading || busy}
             onChange={handleFile}
             style={{ ...inputStyle, padding: 8, cursor: 'pointer' }}
@@ -140,7 +168,7 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
         {/* --- 2. or paste --- */}
         <Field
           label="2) Yoki havola qo‘ying"
-          hint="Video uchun YouTube havolasi (youtube.com/watch?v=… yoki youtu.be/…)"
+          hint="Tashqi rasm havolasi yoki YouTube havolasi (ixtiyoriy)"
         >
           <input
             type="url"
@@ -196,6 +224,22 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
             </label>
           </Field>
         </div>
+
+        {form.media_type === 'video' && !isYoutube && (
+          <Field
+            label="Video muqovasi (rasm yuklash)"
+            hint="Galereyada video o‘rniga shu rasm ko‘rinadi, bosilganda video ijro etiladi."
+          >
+            <input
+              ref={coverInput}
+              type="file"
+              accept={IMAGE_ACCEPT}
+              disabled={uploading || busy}
+              onChange={handleCover}
+              style={{ ...inputStyle, padding: 8, cursor: 'pointer' }}
+            />
+          </Field>
+        )}
 
         <Field
           label="Muqova rasmi (ixtiyoriy)"

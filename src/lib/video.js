@@ -1,11 +1,10 @@
 /**
- * Recognising and embedding third-party video URLs.
+ * Deciding how a media item's video is played.
  *
- * Long videos cannot be hosted on Cloudinary's free plan (100 MB per file, and
- * every play eats the monthly bandwidth quota), so the gallery has to accept a
- * YouTube link as an alternative to an uploaded file. Which of the two a media
- * item is gets decided from its URL rather than a database column, so nothing
- * has to be migrated when the hosting choice changes.
+ * Videos are normally uploaded to our own backend and played with a native
+ * <video> element. A YouTube link is still accepted as an alternative. Which of
+ * the two a media item is gets decided from its URL rather than a database
+ * column, so nothing has to be migrated when the hosting choice changes.
  */
 
 const YOUTUBE_PATTERNS = [
