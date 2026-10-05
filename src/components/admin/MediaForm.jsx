@@ -171,7 +171,10 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
           hint="Tashqi rasm havolasi yoki YouTube havolasi (ixtiyoriy)"
         >
           <input
-            type="url"
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            spellCheck={false}
             value={form.url}
             onChange={set('url')}
             placeholder="https://…"
@@ -246,7 +249,10 @@ export function MediaForm({ token, initial, onSubmit, onCancel, busy }) {
           hint="Rasm yuklaganda avtomatik to‘ladi (kichik nusxa). YouTube uchun bo‘sh qoldiring — muqova avtomatik olinadi."
         >
           <input
-            type="url"
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            spellCheck={false}
             value={form.thumbnail_url}
             onChange={set('thumbnail_url')}
             style={inputStyle}
