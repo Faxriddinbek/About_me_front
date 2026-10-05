@@ -49,6 +49,24 @@ export const translations = {
     retry: 'Qayta urinish',
     loadMore: 'Yana yuklash',
     loadingMore: 'Yuklanmoqda…',
+
+    aiTitle: 'Faxriddinbekning AI yordamchisi',
+    aiGreeting:
+      'Salom! Men Faxriddinbek haqidagi savollaringizga javob beraman: ko‘nikmalari, loyihalari va u bilan qanday bog‘lanish mumkinligi.',
+    aiSuggestions: [
+      'Qaysi texnologiyalarni biladi?',
+      'Qanday loyihalar qilgan?',
+      'U bilan qanday bog‘lansam bo‘ladi?',
+    ],
+    aiPlaceholder: 'Savolingizni yozing…',
+    aiSend: 'Yuborish',
+    aiStop: 'To‘xtatish',
+    aiClose: 'Yopish',
+    aiDisclaimer: 'AI xato qilishi mumkin. Muhim masalalarda to‘g‘ridan-to‘g‘ri yozing.',
+    aiBusy: 'AI hozir band. Birozdan keyin urinib ko‘ring yoki Kontakt orqali yozing.',
+    aiUnavailable: 'AI yordamchi hozircha ishlamayapti. Kontakt orqali yozing.',
+    aiRateLimited: 'Juda ko‘p savol yuborildi. Bir necha daqiqadan keyin urinib ko‘ring.',
+    aiError: 'Javob olib bo‘lmadi. Qayta urinib ko‘ring.',
   },
 
   en: {
@@ -91,6 +109,24 @@ export const translations = {
     retry: 'Retry',
     loadMore: 'Load more',
     loadingMore: 'Loading…',
+
+    aiTitle: 'Faxriddinbek’s AI assistant',
+    aiGreeting:
+      'Hi! I answer questions about Faxriddinbek — his skills, his projects, and how to get in touch.',
+    aiSuggestions: [
+      'What technologies does he use?',
+      'What projects has he built?',
+      'How can I contact him?',
+    ],
+    aiPlaceholder: 'Type your question…',
+    aiSend: 'Send',
+    aiStop: 'Stop',
+    aiClose: 'Close',
+    aiDisclaimer: 'AI can make mistakes. For anything important, contact him directly.',
+    aiBusy: 'The AI is busy right now. Try again shortly, or use the contact form.',
+    aiUnavailable: 'The AI assistant is unavailable right now. Please use the contact form.',
+    aiRateLimited: 'Too many questions. Please try again in a few minutes.',
+    aiError: 'Could not get an answer. Please try again.',
   },
 }
 

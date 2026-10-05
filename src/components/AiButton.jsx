@@ -3,12 +3,9 @@ import { FALLBACK_IMAGE, HERO_PHOTOS } from '../config'
 /**
  * Floating "Ask my AI" button with a spinning conic-gradient ring.
  *
- * The AI chat itself is not built yet. Rather than render a button that does
- * nothing when clicked, it currently jumps to the contact section — a real
- * action that matches the intent. Swap `href` for an onClick that opens the
- * chat modal once that exists.
+ * Clicking it opens the AI chat (see AiChat.jsx).
  */
-export function AiButton({ isMobile }) {
+export function AiButton({ isMobile, onClick }) {
   return (
     <div
       style={{
@@ -39,8 +36,9 @@ export function AiButton({ isMobile }) {
         Ask my AI
       </span>
 
-      <a
-        href="#contact"
+      <button
+        type="button"
+        onClick={onClick}
         className="ai-btn"
         aria-label="Ask my AI"
         style={{
@@ -50,6 +48,8 @@ export function AiButton({ isMobile }) {
           height: 66,
           borderRadius: '50%',
           background: 'transparent',
+          border: 'none',
+          padding: 0,
           cursor: 'pointer',
           animation: 'aiglow 2.6s ease-in-out infinite',
         }}
@@ -83,7 +83,7 @@ export function AiButton({ isMobile }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </span>
-      </a>
+      </button>
     </div>
   )
 }
