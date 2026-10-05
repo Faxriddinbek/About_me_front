@@ -18,6 +18,12 @@ function contactCards() {
     { icon: '→', label: 'Telegram', value: CONTACT.telegram, href: `https://t.me/${handle}` },
     { icon: '$', label: 'GitHub', value: CONTACT.github, href: `https://github.com/${CONTACT.github}` },
     { icon: 'in', label: 'LinkedIn', value: CONTACT.linkedin, href: `https://linkedin.com/in/${CONTACT.linkedin}` },
+    {
+      icon: 'ig',
+      label: 'Instagram',
+      value: `@${CONTACT.instagram}`,
+      href: `https://instagram.com/${CONTACT.instagram}`,
+    },
   ]
 }
 

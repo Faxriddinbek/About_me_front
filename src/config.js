@@ -9,9 +9,11 @@
 /** Contact details shown in the contact section. */
 export const CONTACT = {
   email: 'faxriddinorinboyev12@gmail.com',
-  telegram: '@faxriddinbek',
+  // Personal account, not the @faxriddinbek channel — the link opens a chat.
+  telegram: '@XXXacer_004',
   github: 'Faxriddinbek',
   linkedin: 'faxriddinbek',
+  instagram: 'faxriddinbek_202',
 }
 
 /**

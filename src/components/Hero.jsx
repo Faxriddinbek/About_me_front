@@ -17,6 +17,12 @@ const SWIPE_THRESHOLD_PX = 40
  */
 const FRAME_HEIGHT = 'min(84vh, 900px)'
 
+/** Edge fade for the hero photos — see where it is applied. */
+const PHOTO_MASK = [
+  'linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%)',
+  'linear-gradient(to bottom, transparent 0%, black 14%, black 62%, transparent 96%)',
+].join(', ')
+
 /**
  * Landing section: an auto-advancing photo carousel beside the intro copy.
  *
@@ -162,9 +168,14 @@ export function Hero({ t, lang, isMobile }) {
                 transform: `scale(${isActive ? 1 : 1.07})`,
                 transition: 'opacity 900ms ease, transform 6000ms ease',
                 zIndex: isActive ? 2 : 1,
-                maskImage: 'linear-gradient(to bottom, black 50%, transparent 95%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 95%)',
-                borderRadius: 16,
+                // Feathered on all four sides so the photo dissolves into the
+                // page background instead of showing a hard rectangular edge.
+                // Two gradients are intersected: one fades left/right, the
+                // other top/bottom (the bottom fades longest, under the dots).
+                maskImage: PHOTO_MASK,
+                WebkitMaskImage: PHOTO_MASK,
+                maskComposite: 'intersect',
+                WebkitMaskComposite: 'source-in',
               }}
             />
           )
